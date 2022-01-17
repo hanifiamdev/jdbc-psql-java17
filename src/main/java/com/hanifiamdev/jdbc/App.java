@@ -1,4 +1,4 @@
-package com.hanifiamdev;
+package com.hanifiamdev.jdbc;
 
 public class App {
 

@@ -1,4 +1,4 @@
-package com.hanifiamdev.config;
+package com.hanifiamdev.jdbc;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,7 +9,6 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import static org.junit.jupiter.api.Assertions.*;
 @Slf4j
 class DatasourceConfigTest{
 
@@ -17,7 +16,7 @@ class DatasourceConfigTest{
 
     @BeforeEach
     void setUp() {
-        this.config = new DatasourceConfig("jdbc:postgresql://localhost:5432/hr", "hr", "hr");
+        this.config = new DatasourceConfig();
     }
 
     @Test
