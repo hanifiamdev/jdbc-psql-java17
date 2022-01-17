@@ -34,8 +34,37 @@ public class ExampleTableDao implements CrudRepository<ExampleTable, String> {
     }
 
     @Override
-    public Optional<ExampleTable> findById(String value) throws SQLException {
-        return Optional.empty();
+    public Optional<ExampleTable> findById(String id) throws SQLException {
+        String query = "select id           as id,\n" +
+                "       name         as name,\n" +
+                "       created_date as createdDate,\n" +
+                "       created_time as createdTime,\n" +
+                "       is_active    as active,\n" +
+                "       counter      as counter,\n" +
+                "       currency     as currency,\n" +
+                "       description  as description,\n" +
+                "       floating     as floating\n" +
+                "from example_table\n" +
+                "where id = '" + id + "'";
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(query);
+        ExampleTable data;
+        if (resultSet.next()) {
+            data = new ExampleTable(
+                    resultSet.getString("id"),
+                    resultSet.getString("name"),
+                    resultSet.getDate("createdDate"),
+                    resultSet.getTimestamp("createdTime"),
+                    resultSet.getObject("active", Boolean.class),
+                    resultSet.getLong("counter"),
+                    resultSet.getBigDecimal("currency"),
+                    resultSet.getString("description"),
+                    resultSet.getFloat("floating")
+            );
+            return Optional.of(data);
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -52,7 +81,7 @@ public class ExampleTableDao implements CrudRepository<ExampleTable, String> {
                 "floating     as floating " +
                 "from example_table";
         Statement statement = connection.createStatement();
-       ResultSet resultSet = statement.executeQuery(query);
+        ResultSet resultSet = statement.executeQuery(query);
         while (resultSet.next()) {
             ExampleTable data = new ExampleTable(
                     resultSet.getString("id"),
@@ -74,6 +103,6 @@ public class ExampleTableDao implements CrudRepository<ExampleTable, String> {
 
     @Override
     public List<ExampleTable> findAll(Long start, Long limit, Long orderIndex, String orderDirection, ExampleTable param) throws SQLException {
-      return  null;
+        return null;
     }
 }

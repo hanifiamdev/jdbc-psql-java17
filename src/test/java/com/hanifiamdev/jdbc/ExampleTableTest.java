@@ -11,6 +11,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class ExampleTableTest {
@@ -36,5 +37,17 @@ public class ExampleTableTest {
         } catch (SQLException ex) {
             log.error("can't fetch data", ex);
         }
+    }
+
+    @Test
+    public void testFindById() throws SQLException {
+        try (Connection connection = this.dataSource.getConnection()) {
+            ExampleTableDao dao = new ExampleTableDao(connection);
+            Optional<ExampleTable> data = dao.findById("00'1"); // ini yang membuat eror karena ada ijection character '
+            log.info("{}", data.isPresent());
+        } catch (SQLException ex) {
+            log.error("can't fetch data", ex);
+        }
+
     }
 }
