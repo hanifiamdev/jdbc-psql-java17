@@ -42,9 +42,15 @@ public class ExampleTableTest {
     @Test
     public void testFindById() throws SQLException {
         try (Connection connection = this.dataSource.getConnection()) {
-            ExampleTableDao dao = new ExampleTableDao(connection);
-            Optional<ExampleTable> data = dao.findById("00'1"); // ini yang membuat eror karena ada ijection character '
-            log.info("{}", data.isPresent());
+            this.dao = new ExampleTableDao(connection);
+
+            Optional<ExampleTable> existId = this.dao.findById("001");
+            Assertions.assertTrue(existId.isPresent(), "Data Tidak ditemukan");
+            ExampleTable id001 = existId.get();
+            Assertions.assertEquals(id001.getName(), "Hanif Amrulalah");
+
+            Optional<ExampleTable> notExistId = this.dao.findById("006");
+            Assertions.assertFalse( notExistId.isPresent(), "find by id 006 data not exist actualy");
         } catch (SQLException ex) {
             log.error("can't fetch data", ex);
         }

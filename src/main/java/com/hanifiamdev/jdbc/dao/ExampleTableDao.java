@@ -2,10 +2,7 @@ package com.hanifiamdev.jdbc.dao;
 
 import com.hanifiamdev.jdbc.entity.ExampleTable;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +32,7 @@ public class ExampleTableDao implements CrudRepository<ExampleTable, String> {
 
     @Override
     public Optional<ExampleTable> findById(String id) throws SQLException {
+        //language=PostgreSQL
         String query = "select id           as id,\n" +
                 "       name         as name,\n" +
                 "       created_date as createdDate,\n" +
@@ -45,26 +43,29 @@ public class ExampleTableDao implements CrudRepository<ExampleTable, String> {
                 "       description  as description,\n" +
                 "       floating     as floating\n" +
                 "from example_table\n" +
-                "where id = '" + id + "'";
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
-        ExampleTable data;
-        if (resultSet.next()) {
-            data = new ExampleTable(
-                    resultSet.getString("id"),
-                    resultSet.getString("name"),
-                    resultSet.getDate("createdDate"),
-                    resultSet.getTimestamp("createdTime"),
-                    resultSet.getObject("active", Boolean.class),
-                    resultSet.getLong("counter"),
-                    resultSet.getBigDecimal("currency"),
-                    resultSet.getString("description"),
-                    resultSet.getFloat("floating")
-            );
-            return Optional.of(data);
-        } else {
+                "where id = ?";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setString(1, id);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (!resultSet.next()) {
+            preparedStatement.close();
             return Optional.empty();
         }
+
+        ExampleTable data = new ExampleTable(
+                resultSet.getString("id"),
+                resultSet.getString("name"),
+                resultSet.getDate("createdDate"),
+                resultSet.getTimestamp("createdTime"),
+                resultSet.getObject("active", Boolean.class),
+                resultSet.getLong("counter"),
+                resultSet.getBigDecimal("currency"),
+                resultSet.getString("description"),
+                resultSet.getFloat("floating")
+        );
+        resultSet.close();
+        preparedStatement.close();
+        return Optional.of(data);
     }
 
     @Override
