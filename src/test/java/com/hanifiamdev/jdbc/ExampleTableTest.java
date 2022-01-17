@@ -30,6 +30,7 @@ public class ExampleTableTest {
         try (Connection connection = this.dataSource.getConnection()) {
             this.dao = new ExampleTableDao(connection);
             List<ExampleTable> list = this.dao.findAll();
+            log.info("=== Result testFindAllData ===");
             list.forEach(data -> {
                 log.info("{}", data.toString());
             });
@@ -51,6 +52,28 @@ public class ExampleTableTest {
 
             Optional<ExampleTable> notExistId = this.dao.findById("006");
             Assertions.assertFalse( notExistId.isPresent(), "find by id 006 data not exist actualy");
+        } catch (SQLException ex) {
+            log.error("can't fetch data", ex);
+        }
+
+    }
+
+    @Test
+    public void testPagination() throws SQLException {
+        try (Connection connection = this.dataSource.getConnection()) {
+            this.dao = new ExampleTableDao(connection);
+            ExampleTable params = new ExampleTable();
+            params.setActive(true);
+            List<ExampleTable> datas = this.dao.findAll(0L,2L, "createdtime", params);
+            for (ExampleTable data : datas) {
+                log.info("Data Page Pertama : {} ",  data.toString());
+            }
+            Assertions.assertEquals(2, datas.size());
+            List<ExampleTable> datas2 = this.dao.findAll(2L,3L, "createdtime", params);
+            for (ExampleTable data : datas2) {
+                log.info("Data Page Kedua : {} ",  data.toString());
+            }
+            Assertions.assertEquals(3, datas2.size());
         } catch (SQLException ex) {
             log.error("can't fetch data", ex);
         }

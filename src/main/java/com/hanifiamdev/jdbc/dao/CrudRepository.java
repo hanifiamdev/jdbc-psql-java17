@@ -16,5 +16,5 @@ public interface CrudRepository<T, ID> {
 
     public List<T> findAll() throws SQLException;
 
-    public List<T> findAll(Long start, Long limit, Long orderIndex, String orderDirection, T param) throws SQLException;
+    public List<T> findAll(Long start, Long limit, String orderDirection, T param) throws SQLException;
 }
