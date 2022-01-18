@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,6 +58,36 @@ public class ExampleTableTest {
 
             Optional<ExampleTable> notExistId = this.dao.findById("006");
             Assertions.assertFalse(notExistId.isPresent(), "find by id 006 data not exist actualy");
+        } catch (SQLException ex) {
+            log.error("can't fetch data", ex);
+        }
+
+    }
+
+    @Test
+    public void testFindByIds() {
+        try (Connection connection = this.dataSource.getConnection()) {
+            this.dao = new ExampleTableDao(connection);
+            List<ExampleTable> list = this.dao.findByIds("001", "002", "003");
+            for (ExampleTable exampleTable : list) {
+                log.info(exampleTable.toString());
+            }
+            Assertions.assertEquals(3, list.size(), "Jumlah data by ids");
+        } catch (SQLException ex) {
+            log.error("can't fetch data", ex);
+        }
+
+    }
+
+    @Test
+    public void testFindByListId() {
+        try (Connection connection = this.dataSource.getConnection()) {
+            this.dao = new ExampleTableDao(connection);
+            List<ExampleTable> list = this.dao.findByIds(Arrays.asList("001", "002", "003"));
+            for (ExampleTable exampleTable : list) {
+                log.info(exampleTable.toString());
+            }
+            Assertions.assertEquals(3, list.size(), "Jumlah data List by id");
         } catch (SQLException ex) {
             log.error("can't fetch data", ex);
         }

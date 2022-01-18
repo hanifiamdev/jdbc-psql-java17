@@ -112,6 +112,82 @@ public class ExampleTableDao implements CrudRepository<ExampleTable, String> {
         return Optional.of(data);
     }
 
+    public List<ExampleTable> findByIds(String... ids) throws SQLException {
+        List<ExampleTable> list = new ArrayList<>();
+        String query = "select id    as id,\n" +
+                "       name         as name,\n" +
+                "       created_date as createdDate,\n" +
+                "       created_time as createdTime,\n" +
+                "       is_active    as active,\n" +
+                "       counter      as counter,\n" +
+                "       currency     as currency,\n" +
+                "       description  as description,\n" +
+                "       floating     as floating\n" +
+                "from example_table\n" +
+                "where id = any (?)";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        Array arrayOfId = connection.createArrayOf("VARCHAR", ids.clone());
+        preparedStatement.setArray(1, arrayOfId);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        ExampleTable data;
+        while (resultSet.next()) {
+            data = new ExampleTable(
+                    resultSet.getString("id"),
+                    resultSet.getString("name"),
+                    resultSet.getDate("createdDate"),
+                    resultSet.getTimestamp("createdTime"),
+                    resultSet.getObject("active", Boolean.class),
+                    resultSet.getLong("counter"),
+                    resultSet.getBigDecimal("currency"),
+                    resultSet.getString("description"),
+                    resultSet.getFloat("floating")
+            );
+            list.add(data);
+        }
+        resultSet.close();
+        preparedStatement.close();
+        arrayOfId.free();
+        return list;
+    }
+
+    public List<ExampleTable> findByIds(List<String> param) throws SQLException {
+        List<ExampleTable> list = new ArrayList<>();
+        String query = "select id    as id,\n" +
+                "       name         as name,\n" +
+                "       created_date as createdDate,\n" +
+                "       created_time as createdTime,\n" +
+                "       is_active    as active,\n" +
+                "       counter      as counter,\n" +
+                "       currency     as currency,\n" +
+                "       description  as description,\n" +
+                "       floating     as floating\n" +
+                "from example_table\n" +
+                "where id = any (?)";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        Array arrayOfId = connection.createArrayOf("VARCHAR", param.toArray());
+        preparedStatement.setArray(1, arrayOfId);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        ExampleTable data;
+        while (resultSet.next()) {
+            data = new ExampleTable(
+                    resultSet.getString("id"),
+                    resultSet.getString("name"),
+                    resultSet.getDate("createdDate"),
+                    resultSet.getTimestamp("createdTime"),
+                    resultSet.getObject("active", Boolean.class),
+                    resultSet.getLong("counter"),
+                    resultSet.getBigDecimal("currency"),
+                    resultSet.getString("description"),
+                    resultSet.getFloat("floating")
+            );
+            list.add(data);
+        }
+        resultSet.close();
+        preparedStatement.close();
+        arrayOfId.free();
+        return list;
+    }
+
     @Override
     public List<ExampleTable> findAll() throws SQLException {
         List<ExampleTable> list = new ArrayList<>();
