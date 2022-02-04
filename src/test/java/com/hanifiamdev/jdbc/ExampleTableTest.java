@@ -19,6 +19,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 @Slf4j
 public class ExampleTableTest {
 
@@ -152,9 +154,9 @@ public class ExampleTableTest {
                     Timestamp.valueOf(LocalDateTime.now()), true, 0L, BigDecimal.ONE, null, 0f);
 
             data = this.dao.save(data);
-            Assertions.assertNotNull(data.getId(),"Example id save");
+            assertNotNull(data.getId(), "Example id save");
             // select
-            Optional<ExampleTable>  optional = dao.findById(data.getId());
+            Optional<ExampleTable> optional = dao.findById(data.getId());
             Assertions.assertTrue(optional.isPresent(), "Data telah disimpan");
 
             // delete data
@@ -167,13 +169,13 @@ public class ExampleTableTest {
             Assertions.assertTrue(optional.isPresent(), "find by id 003 is present");
             data = optional.orElse(new ExampleTable());
             String oldName = "Pratama Arhan";
-            Assertions.assertEquals( oldName, data.getName(), "Check Name For Id 003");
+            Assertions.assertEquals(oldName, data.getName(), "Check Name For Id 003");
 
             data.setName("Arho");
             dao.update(data);
 
             Optional<ExampleTable> optionalUpdated = dao.findById(data.getId());
-            ExampleTable newData =  optionalUpdated.orElse(new ExampleTable());
+            ExampleTable newData = optionalUpdated.orElse(new ExampleTable());
             Assertions.assertEquals("Arho", newData.getName(), "isEqual For Name Updated");
 
             // supaya balik nilai semula agar di running ulang tidak error
@@ -182,5 +184,67 @@ public class ExampleTableTest {
         } catch (SQLException ex) {
             log.error("can't update data", ex);
         }
+    }
+
+    @Test
+    void testTransacctionCommitRollback() {
+        Connection connection = null;
+        ExampleTable person = new ExampleTable(
+                null,
+                "Muhamad Purwadi",
+                Date.valueOf(LocalDate.now()),
+                Timestamp.valueOf(LocalDateTime.now()),
+                true,
+                0l,
+                new BigDecimal(100000),
+                "test data",
+                0f);
+        try {
+            connection = this.dataSource.getConnection();
+            log.info("status connected");
+            connection.setAutoCommit(false);
+            log.info("status connected");
+            this.dao = new ExampleTableDao(connection);
+
+
+            ExampleTable save1 = this.dao.save(person);
+            assertNotNull("employee id not null", save1.getId());
+            log.info("employee: {}", save1);
+
+            person.setCurrency(new BigDecimal(10));
+            ExampleTable save2 = this.dao.update(person);
+            connection.commit(); // jika ini di take out maka tidak akan tercommit untuk prosese transactionalnyasactional
+            connection.close();
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+            log.error("sql exception", exception);
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                    log.warn("was rollback");
+                    connection.close();
+                } catch (SQLException sqlRollbackException) {
+                    log.error("failed rollback", sqlRollbackException);
+                }
+            }
+        }
+
+        // Tes dengan membuka koneksi baru untuk mengecek data sudah masuk apa belum
+        Connection connection2 = null;
+        try {
+            connection2 = this.dataSource.getConnection();
+            ExampleTableDao dao = new ExampleTableDao(connection2);
+            Optional<ExampleTable> newDataExist = dao.findById(person.getId());
+            // Check apakah data baru sudah tersimpan ,,jka iya akan bernilai true
+            Assertions.assertTrue(newDataExist.isPresent(), "Data Baru tersimpan?");
+            if(newDataExist.isPresent()) {
+                ExampleTable data = newDataExist.get();
+                dao.removeById(data.getId());
+            }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
+
+
     }
 }
