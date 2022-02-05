@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -237,10 +238,74 @@ public class ExampleTableTest {
             Optional<ExampleTable> newDataExist = dao.findById(person.getId());
             // Check apakah data baru sudah tersimpan ,,jka iya akan bernilai true
             Assertions.assertTrue(newDataExist.isPresent(), "Data Baru tersimpan?");
-            if(newDataExist.isPresent()) {
+            if (newDataExist.isPresent()) {
                 ExampleTable data = newDataExist.get();
                 dao.removeById(data.getId());
             }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    // BulkUpload sering disebut juga Batch Processing
+    @Test
+    void testBulkUplload() {
+        Connection connection = null;
+        List<ExampleTable> list = new ArrayList<>();
+        List<String> newId = new ArrayList<>();
+        try {
+            connection = this.dataSource.getConnection();
+            connection.setAutoCommit(false);
+
+            list.add(new ExampleTable(
+                    null,
+                    "Indra Kenz",
+                    Date.valueOf(LocalDate.now()),
+                    Timestamp.valueOf(LocalDateTime.now()),
+                    true,
+                    0l,
+                    new BigDecimal(200000),
+                    "Affiliator Kondang",
+                    0f));
+
+            list.add(new ExampleTable(
+                    null,
+                    "Doni salmanan",
+                    Date.valueOf(LocalDate.now()),
+                    Timestamp.valueOf(LocalDateTime.now()),
+                    true,
+                    0l,
+                    new BigDecimal(200000),
+                    "Affiliator Kondang",
+                    0f));
+            this.dao = new ExampleTableDao(connection);
+            newId = dao.save(list);
+            Assertions.assertEquals(2, newId.size(), "Jumlah ada terinsert");
+
+            connection.commit();
+
+        } catch (SQLException sqle) {
+            sqle.printStackTrace();
+            log.error("sql exception", sqle);
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                    log.warn("was rollback");
+                    connection.close();
+                } catch (SQLException sqlRollbackException) {
+                    log.error("failed rollback", sqlRollbackException);
+                }
+            }
+        }
+        // Tes dengan membuka koneksi baru untuk mengecek data sudah masuk apa belum
+        Connection connection2 = null;
+        try {
+            connection2 = this.dataSource.getConnection();
+            ExampleTableDao dao = new ExampleTableDao(connection2);
+            List<ExampleTable> newList = dao.findByIds(newId);
+
+            Assertions.assertEquals(2, newList.size(), "Data Baru tersimpan jumlahnya");
+            dao.removeById(newId);
         } catch (SQLException exception) {
             exception.printStackTrace();
         }

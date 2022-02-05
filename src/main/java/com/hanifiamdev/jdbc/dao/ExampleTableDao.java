@@ -39,6 +39,33 @@ public class ExampleTableDao implements CrudRepository<ExampleTable, String> {
         return value;
     }
 
+    public List<String> save(List<ExampleTable> values) throws SQLException {
+        List<String> listId = new ArrayList<>();
+        String query = "insert into example_table (id, name, created_date, created_time, is_active, counter, currency, description, floating" +
+                ")\n" +
+                "values (gen_random_uuid(), ?, ?, ?, ?, ?, ?, ?, ?)";
+        PreparedStatement preparedStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+        for (ExampleTable value : values) {
+            preparedStatement.setString(1, value.getName());
+            preparedStatement.setDate(2, value.getCreatedDate());
+            preparedStatement.setTimestamp(3, value.getCreatedTime());
+            preparedStatement.setBoolean(4, value.getActive());
+            preparedStatement.setLong(5, value.getCounter());
+            preparedStatement.setBigDecimal(6, value.getCurrency());
+            preparedStatement.setString(7, value.getDescription());
+            preparedStatement.setFloat(8, value.getFloating());
+            preparedStatement.addBatch();
+
+        }
+        preparedStatement.executeBatch();
+        ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+        while (generatedKeys.next())
+            listId.add(generatedKeys.getString("id")); // bisa diisi 1, karena kolom ke - 1 untuk id
+        preparedStatement.close();
+        generatedKeys.close();
+        return listId;
+    }
+
     @Override
     public ExampleTable update(ExampleTable value) throws SQLException {
         String query = "update example_table\n" +
@@ -70,6 +97,19 @@ public class ExampleTableDao implements CrudRepository<ExampleTable, String> {
                 "where id = ?";
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setString(1, value);
+        int row = statement.executeUpdate();
+        statement.close();
+        return row >= 1;
+    }
+
+
+    public Boolean removeById(List<String> value) throws SQLException {
+        String query = "delete\n" +
+                "from example_table\n" +
+                "where id = any (?)";
+        PreparedStatement statement = connection.prepareStatement(query);
+        Array ids = connection.createArrayOf("VARCHAR", value.toArray());
+        statement.setArray(1, ids);
         int row = statement.executeUpdate();
         statement.close();
         return row >= 1;
@@ -110,6 +150,43 @@ public class ExampleTableDao implements CrudRepository<ExampleTable, String> {
         resultSet.close();
         preparedStatement.close();
         return Optional.of(data);
+    }
+
+    public List<ExampleTable> findByListId(List<String> params) throws SQLException {
+        List<ExampleTable> list = new ArrayList<>();
+        String query = "select id    as id,\n" +
+                "       name         as name,\n" +
+                "       created_date as createdDate,\n" +
+                "       created_time as createdTime,\n" +
+                "       is_active    as active,\n" +
+                "       counter      as counter,\n" +
+                "       currency     as currency,\n" +
+                "       description  as description,\n" +
+                "       floating     as floating\n" +
+                "from example_table\n" +
+                "where id = ?";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        Array ids = connection.createArrayOf("VARCHAR", params.toArray());
+        preparedStatement.setArray(1, ids);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            ExampleTable data = new ExampleTable(
+                    resultSet.getString("id"),
+                    resultSet.getString("name"),
+                    resultSet.getDate("createdDate"),
+                    resultSet.getTimestamp("createdTime"),
+                    resultSet.getObject("active", Boolean.class),
+                    resultSet.getLong("counter"),
+                    resultSet.getBigDecimal("currency"),
+                    resultSet.getString("description"),
+                    resultSet.getFloat("floating")
+            );
+            list.add(data);
+        }
+        resultSet.close();
+        preparedStatement.close();
+        ids.free();
+        return list;
     }
 
     public List<ExampleTable> findByIds(String... ids) throws SQLException {
