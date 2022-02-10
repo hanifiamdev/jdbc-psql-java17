@@ -3,13 +3,14 @@ package com.hanifiamdev.jdbc.dao.perpustakaan;
 import com.hanifiamdev.jdbc.dao.CrudRepository;
 import com.hanifiamdev.jdbc.entity.perpustakaan.Buku;
 import com.hanifiamdev.jdbc.entity.perpustakaan.Penerbit;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 public class BukuDao implements CrudRepository<Buku, String> {
 
     private Connection connection;
@@ -20,17 +21,55 @@ public class BukuDao implements CrudRepository<Buku, String> {
 
     @Override
     public Buku save(Buku value) throws SQLException {
-        return null;
+        //language=PostgreSQL
+        String query = "insert into perpustakaan.buku (nama, isbn, penerbit_id, tanggal_terbit) values (?, ?, ?, ?)";
+        PreparedStatement preparedStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+        preparedStatement.setString(1, value.getNama());
+        preparedStatement.setString(2, value.getIsbn());
+        if (value.getPenerbit() != null) {
+            preparedStatement.setNull(3, Types.VARCHAR);
+        } else {
+            preparedStatement.setString(3, value.getPenerbit().getId());
+        }
+        int row = preparedStatement.executeUpdate();
+        log.info("Success Add Buku {} row ", row);
+        ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+        if (generatedKeys.next())
+            value.setId(generatedKeys.getString("id"));
+        preparedStatement.close();
+        return value;
     }
 
     @Override
     public Buku update(Buku value) throws SQLException {
-        return null;
+        //language=PostgreSQL
+        String query = "update perpustakaan.buku set nama = ?, isbn = ?, penerbit_id = ?, tanggal_terbit = ? where id = ?";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setString(1, value.getNama());
+        preparedStatement.setString(2, value.getIsbn());
+        if (value.getPenerbit() != null) {
+            preparedStatement.setNull(3, Types.VARCHAR);
+        } else {
+            preparedStatement.setString(3, value.getPenerbit().getId());
+        }
+        preparedStatement.setDate(4, (Date) value.getTangggalTerbit() != null ? (Date) value.getTangggalTerbit() : null);
+        preparedStatement.setString(5, value.getId());
+        int row = preparedStatement.executeUpdate();
+        log.info("Success Update Buku {} row ", row);
+        preparedStatement.close();
+        return value;
     }
 
     @Override
     public Boolean removeById(String value) throws SQLException {
-        return null;
+        //language=PostgreSQL
+        String query = "delete from perpustakaan.buku where id = ?";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setString(1, value);
+        int row = preparedStatement.executeUpdate();
+        log.info("Success Deleted Buku {} row ", row);
+        preparedStatement.close();
+        return row >= 1;
     }
 
     @Override

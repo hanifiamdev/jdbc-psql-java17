@@ -1,7 +1,6 @@
 package com.hanifiamdev.jdbc;
 
 import com.hanifiamdev.jdbc.dao.perpustakaan.PenerbitDao;
-import com.hanifiamdev.jdbc.entity.ExampleTable;
 import com.hanifiamdev.jdbc.entity.perpustakaan.Penerbit;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
