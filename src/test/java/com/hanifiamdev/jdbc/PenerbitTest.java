@@ -31,6 +31,8 @@ public class PenerbitTest {
             log.info("=== Result testFindAllData ===");
             list.forEach(data -> {
                 log.info("{}", data.toString());
+                // ini karena di exclude dari toString maka check disini untuk lihat hasilnya
+                log.info("List Buku dari penerbit id {} => {}", data.getId(), data.getListBuku());
             });
             Assertions.assertEquals(list.size(), 2);
         } catch (SQLException ex) {
@@ -47,8 +49,11 @@ public class PenerbitTest {
             Penerbit penerbit = byId.get();
             Assertions.assertEquals(penerbit.getNama(), "Informatika", "Id Penerbit 001 adalah");
 
-           Optional<Penerbit> notExistId = dao.findById("099");
-            Assertions.assertFalse(notExistId.isPresent(), "find by id 006 data not exist actualy");
+            // check size list buku
+            Assertions.assertEquals(penerbit.getListBuku().size(), 2, "jumlah buku di penerbit 001");
+
+            Optional<Penerbit> notExistId = dao.findById("099");
+            //Assertions.assertFalse(notExistId.isPresent(), "find by id 006 data not exist actualy");
 
         } catch (SQLException ex) {
             log.error("can't fetch data", ex);

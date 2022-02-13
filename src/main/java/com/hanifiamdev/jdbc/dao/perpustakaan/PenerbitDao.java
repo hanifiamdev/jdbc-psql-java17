@@ -1,6 +1,7 @@
 package com.hanifiamdev.jdbc.dao.perpustakaan;
 
 import com.hanifiamdev.jdbc.dao.CrudRepository;
+import com.hanifiamdev.jdbc.entity.perpustakaan.Buku;
 import com.hanifiamdev.jdbc.entity.perpustakaan.Penerbit;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,28 +63,68 @@ public class PenerbitDao implements CrudRepository<Penerbit, String> {
 
     @Override
     public Optional<Penerbit> findById(String value) throws SQLException {
-        String query = "select id as id, " +
-                "nama as nama, " +
-                "alamat as alamat " +
-                "from perpustakaan.penerbit " +
-                "where id = ?";
+        //language=PostgreSQL
+        String query = "select p.id as id, \n" +
+                "       p." +
+                "nama as nama, \n" +
+                "       p." +
+                "alamat as alamat,\n" +
+                "       b.id as buku_id,\n" +
+                "       b.nama as buku_nama, \n" +
+                "       b.isbn as buku_isbn, \n" +
+                "       b.tanggal_terbit as tanggal_terbit \n" +
+                "from perpustakaan.penerbit p\n" +
+                "join perpustakaan.buku b on p.id = b.penerbit_id" +
+                " \n" +
+                "where p.id = ?";
         PreparedStatement preparedStatement = connection.prepareStatement(query);
         preparedStatement.setString(1, value);
         ResultSet resultSet = preparedStatement.executeQuery();
-        if (!resultSet.next()) {
-            preparedStatement.close();
-            return Optional.empty();
+        Penerbit penerbit = new Penerbit();
+        List<Buku> listBuku = new ArrayList<>();
+        while (resultSet.next()) {
+            Buku buku = new Buku();
+            buku.setId(resultSet.getString("buku_id"));
+            buku.setNama(resultSet.getString("buku_nama"));
+            buku.setIsbn(resultSet.getString("buku_isbn"));
+            listBuku.add(buku);
+            if (penerbit.getId() == null) {
+                penerbit.setId(resultSet.getString("id"));
+                penerbit.setNama(resultSet.getString("nama"));
+                penerbit.setAlamat(resultSet.getString("alamat"));
+            }
         }
-
-        Penerbit data = new Penerbit(
-                resultSet.getString("id"),
-                resultSet.getString("nama"),
-                resultSet.getString("alamat"),
-                new ArrayList<>()
-        );
+        penerbit.setListBuku(listBuku);
         resultSet.close();
         preparedStatement.close();
-        return Optional.of(data);
+        return Optional.of(penerbit);
+    }
+
+    public List<Buku> findByPenerbitId(String value) throws SQLException {
+        //language=PostgreSQL
+        String query = "select b." +
+                "id             as buku_id,\n" +
+                "       b.nama           as buku_nama,\n" +
+                "       b.isbn           as buku_isbn,\n" +
+                "       b.tanggal_terbit as tanggal_terbit\n" +
+                "from perpustakaan.penerbit p\n" +
+                "join perpustakaan.buku b on p.id = b.penerbit_id\n" +
+                "where p.id = ?";
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setString(1, value);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        Penerbit penerbit = new Penerbit();
+        List<Buku> listBuku = new ArrayList<>();
+        while (resultSet.next()) {
+            Buku buku = new Buku();
+            buku.setId(resultSet.getString("buku_id"));
+            buku.setNama(resultSet.getString("buku_nama"));
+            buku.setIsbn(resultSet.getString("buku_isbn"));
+            listBuku.add(buku);
+        }
+        preparedStatement.close();
+        resultSet.close();
+        return listBuku;
     }
 
     @Override
@@ -100,7 +141,7 @@ public class PenerbitDao implements CrudRepository<Penerbit, String> {
                     resultSet.getString("id"),
                     resultSet.getString("nama"),
                     resultSet.getString("alamat"),
-                    new ArrayList<>()
+                    this.findByPenerbitId(resultSet.getString("id"))
             );
             list.add(data);
         }
