@@ -15,5 +15,7 @@ public class TransaksiDetail {
     private Transaksi transaksi;
     private Buku buku;
     private Date tanggalKembali;
+    private Boolean statusKembali;
+    private Date lastUpdateDate;
 
 }

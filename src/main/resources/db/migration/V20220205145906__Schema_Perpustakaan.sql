@@ -1,4 +1,4 @@
--- create schema perpustakaan;
+create schema if not exists perpustakaan;
 
 create table perpustakaan.buku
 (
